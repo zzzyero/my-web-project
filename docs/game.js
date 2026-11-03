@@ -1,5 +1,4 @@
-import {sharedEnabled,cleanNickname,readNickname,saveNickname,topScores,submitScore} from './leaderboard.js';
-import {MAX_CHARGE,jumpDistance,landed,centered,award,nextPlatform} from './physics.js';
+import {MAX_CHARGE,jumpDistance,landed,centered,award,nextPlatform} from './physics.js?v=2';
 const $=s=>document.querySelector(s), canvas=$('#game'),ctx=canvas.getContext('2d');
 let character='snow', sound=false,audio,game=null,W=430,H=800,raf,toastTimer;
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
@@ -61,7 +60,7 @@ document.querySelectorAll('.sound').forEach(b=>b.onclick=()=>{sound=!sound;docum
 $('#rules-button').onclick=()=>$('#rules').showModal();document.querySelectorAll('.dialog-close').forEach(b=>b.onclick=()=>$('#rules').close());
 function readBest(){try{return Number(localStorage.getItem(`hop-best-${character}`))||0;}catch{return 0;}}
 function saveBest(n){try{localStorage.setItem(`hop-best-${character}`,String(n));}catch{}}
-function start(){$('#submit-score').disabled=true;saveNickname($('#nickname').value);$('#nickname').value=readNickname();cancelAnimationFrame(raf);$('#result').close();$('#home').classList.add('hidden');$('#play').classList.remove('hidden');document.body.classList.add('playing');resize();let p={x:0,y:0,r:61,index:0,item:false},next=nextPlatform(p,1);game={platforms:[p,next],index:0,x:0,y:0,score:0,combo:0,best:readBest(),state:'ready',charge:0,cameraX:0,cameraY:0,jump:null,particles:[],last:performance.now(),fall:0,runId:crypto.randomUUID(),nickname:readNickname(),character};$('#score').textContent='0';$('#best').textContent=`最佳 ${game.best}`;$('#scene-label').textContent=character==='snow'?'云宝宝 · 雪地漫游':'泰风 · 竹林漫游';$('#hint').textContent='首跳试试蓄力约 0.7 秒';$('#toast').textContent='';$('#charge-fill').style.width='0';$('#share-status').textContent='';$('#share-url').classList.add('hidden');raf=requestAnimationFrame(frame);}
+function start(){cancelAnimationFrame(raf);$('#result').close();$('#home').classList.add('hidden');$('#play').classList.remove('hidden');document.body.classList.add('playing');resize();let p={x:0,y:0,r:61,index:0,item:false},next=nextPlatform(p,1);game={platforms:[p,next],index:0,x:0,y:0,score:0,combo:0,best:readBest(),state:'ready',charge:0,cameraX:0,cameraY:0,jump:null,particles:[],last:performance.now(),fall:0};$('#score').textContent='0';$('#best').textContent=`最佳 ${game.best}`;$('#scene-label').textContent=character==='snow'?'云宝宝 · 雪地漫游':'泰风 · 竹林漫游';$('#hint').textContent='首跳试试蓄力约 0.7 秒';$('#toast').textContent='';$('#charge-fill').style.width='0';$('#share-status').textContent='';$('#share-url').classList.add('hidden');raf=requestAnimationFrame(frame);}
 $('#start').onclick=start;$('#retry').onclick=start;
 function home(){cancelAnimationFrame(raf);game=null;$('#result').close();$('#play').classList.add('hidden');$('#home').classList.remove('hidden');document.body.classList.remove('playing');}$('#back').onclick=home;$('#change').onclick=home;
 function resize(){let rect=$('#play').getBoundingClientRect();W=430;H=rect.height/rect.width*W;let dpr=Math.min(devicePixelRatio||1,2);canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);}window.addEventListener('resize',()=>{if(game)resize();});
@@ -70,7 +69,7 @@ function release(){if(!game||game.state!=='charging')return;let ms=performance.n
 function cancelCharge(){if(game?.state==='charging'){game.state='ready';$('#charge-fill').style.width='0';}}
 $('#play').addEventListener('pointerdown',e=>{if(e.target.closest('.game-top')||e.button!==0)return;e.preventDefault();$('#play').setPointerCapture(e.pointerId);begin();});$('#play').addEventListener('pointerup',release);$('#play').addEventListener('pointercancel',cancelCharge);$('#play').addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('keydown',e=>{if(e.code==='Space'&&game&&!document.querySelector('dialog[open]')){e.preventDefault();if(!e.repeat)begin();}});window.addEventListener('keyup',e=>{if(e.code==='Space')release();});window.addEventListener('blur',cancelCharge);document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelCharge();});
 function toast(text){clearTimeout(toastTimer);$('#toast').textContent=text;toastTimer=setTimeout(()=>{$('#toast').textContent='';},1400);}
-function finish(){game.state='over';let record=game.score>game.best;if(record)saveBest(game.score);$('#final-score').textContent=game.score;$('#result-icon').textContent=character==='snow'?'♥':'🍮';$('#result-best').textContent=`${record?'新纪录！ · ':''}历史最佳 ${Math.max(game.best,game.score)}`;$('#result-message').textContent=game.score===0?'差一点点！试着调整长按时间。':'每一次起跳，都是新的开始。';$('#submit-score').disabled=!sharedEnabled||game.score===0;$('#submit-status').textContent=sharedEnabled?(game.score===0?'拿到分数后再来挑战共享榜吧。':`以「${game.nickname}」提交本次成绩`):'共享排行榜尚未启用，本次最高分已保存在此浏览器。';$('#result').showModal();tone(150,.35);}
+function finish(){game.state='over';let record=game.score>game.best;if(record)saveBest(game.score);$('#final-score').textContent=game.score;$('#result-icon').textContent=character==='snow'?'♥':'🍮';$('#result-best').textContent=`${record?'新纪录！ · ':''}历史最佳 ${Math.max(game.best,game.score)}`;$('#result-message').textContent=game.score===0?'差一点点！试着调整长按时间。':'每一次起跳，都是新的开始。';$('#result').showModal();tone(150,.35);}
 function land(){let g=game,p=g.platforms[g.index+1];if(!landed(g.x,g.y,p)){g.state='falling';g.fall=performance.now();return;}let center=centered(g.x,g.y,p);let points=award(center,g.combo);g.combo=center?g.combo+1:0;let collect=Boolean(p.item);if(collect&&p.item){points+=3;p.item=false;}g.landTime=performance.now();g.score+=points;g.index++;g.platforms.push(nextPlatform(p,g.index+1));g.state='ready';$('#score').textContent=g.score;$('#hint').textContent=`下一站 · ${g.platforms[g.index+1].name} · 留意落脚面积`;toast(`${center?`完美 ×${g.combo}  `:''}${collect?(character==='snow'?'♥ 爱心 ':'🍮 布丁 '):''}+${points}`);for(let i=0;i<14;i++)g.particles.push({x:g.x,y:g.y,vx:(Math.random()-.5)*70,vy:-Math.random()*90,life:1});tone(center?850:600,.16);}
 function platformFace(p,x,y,color){
  ctx.save();ctx.translate(x,y);ctx.scale(1,.49);ctx.rotate(p.angle||0);ctx.fillStyle=color;ctx.beginPath();
@@ -99,30 +98,3 @@ function frame(t){if(!game)return;let g=game,dt=Math.min((t-g.last)/1000,.05);g.
  let current=g.platforms[g.index],next=g.platforms[g.index+1];let targetX=(current.x+next.x)*.5,targetY=current.y-30;g.cameraX+=(targetX-g.cameraX)*Math.min(1,dt*4);g.cameraY+=(targetY-g.cameraY)*Math.min(1,dt*4);backdrop(t);
  g.platforms.slice(Math.max(0,g.index-3)).sort((a,b)=>a.y-b.y).forEach(p=>platform(p,t));let px=W*.5+g.x-g.cameraX,py=H*.59+g.y-g.cameraY;ellipse(ctx,px,py,19-lift*.03,7-lift*.014,'#345c4825');if(g.state==='jumping'){const j=g.jump;drawJumpCharacter(ctx,px,py-lift,.78,character,clamp((t-j.start)/j.duration,0,1),j.ex-j.sx);}else drawCharacter(ctx,px,py-lift,.78,character,squash);g.particles=g.particles.filter(p=>p.life>0);g.particles.forEach(p=>{p.life-=dt*1.3;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=160*dt;ctx.globalAlpha=Math.max(0,p.life);ellipse(ctx,W*.5+p.x-g.cameraX,H*.59+p.y-g.cameraY,3,3,character==='snow'?'#eeb3aa':'#d7b46f');ctx.globalAlpha=1;});if(g.state!=='over')raf=requestAnimationFrame(frame);}
 $('#share').onclick=async()=>{let url=location.origin+location.pathname;try{await navigator.clipboard.writeText(url);$('#share-status').textContent='链接已复制，发给朋友一起挑战吧！';}catch{let input=$('#share-url');input.value=url;input.classList.remove('hidden');input.focus();input.select();$('#share-status').textContent='长按或选中上方链接复制，即可分享。';}};
-
-$('#nickname').value=readNickname();
-$('#nickname').addEventListener('change',()=>{$('#nickname').value=saveNickname($('#nickname').value);});
-let rankingCharacter='snow',rankingRequest=0;
-async function refreshRanking(){
- const requestId=++rankingRequest;$('#ranking-list').replaceChildren();
- $('#ranking-status').textContent=sharedEnabled?'正在加载共享排行榜…':'共享排行榜尚未启用。以下是此浏览器的最佳成绩。';
- try{
-  let rows;
-  if(sharedEnabled)rows=await topScores(rankingCharacter);
-  else {let score=0;try{score=Number(localStorage.getItem(`hop-best-${rankingCharacter}`))||0;}catch{}rows=score?[{nickname:readNickname(),score}]:[];}
-  if(requestId!==rankingRequest)return;
-  if(sharedEnabled)$('#ranking-status').textContent=rows.length?'共享榜 · 最高的 20 次旅行':'还没有成绩，来做第一位旅行者吧。';
-  else if(!rows.length)$('#ranking-status').textContent+=' 还没有成绩，出发试试吧！';
-  for(const row of rows){const li=document.createElement('li'),name=document.createElement('span'),score=document.createElement('strong');name.textContent=cleanNickname(String(row.nickname));score.textContent=`${row.score} 分`;li.append(name,score);$('#ranking-list').append(li);}
- }catch(error){if(requestId===rankingRequest)$('#ranking-status').textContent=error.message;}
-}
-$('#leaderboard-button').onclick=()=>{$('#leaderboard').showModal();refreshRanking();};
-$('#ranking-close').onclick=()=>{$('#leaderboard').close();rankingRequest++;};
-$('#ranking-refresh').onclick=refreshRanking;
-document.querySelectorAll('[data-ranking]').forEach(button=>button.onclick=()=>{rankingCharacter=button.dataset.ranking;document.querySelectorAll('[data-ranking]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));refreshRanking();});
-$('#submit-score').onclick=async()=>{
- const run=game,button=$('#submit-score');if(!run||run.state!=='over'||button.disabled)return;
- button.disabled=true;$('#submit-status').textContent='正在提交…';
- try{await submitScore({id:run.runId,nickname:run.nickname,character:run.character,score:run.score});if(game===run)$('#submit-status').textContent='成绩已提交到共享排行榜！';}
- catch(error){if(game===run){$('#submit-status').textContent=error.message;button.disabled=false;}}
-};
