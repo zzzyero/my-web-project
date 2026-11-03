@@ -1,5 +1,5 @@
-export const MAX_CHARGE = 1400;
-export function jumpDistance(ms) { return 20 + Math.min(Math.max(ms, 0), MAX_CHARGE) * .19; }
+export const MAX_CHARGE = 1000;
+export function jumpDistance(ms) { return 20 + Math.min(Math.max(ms, 0), MAX_CHARGE) * .27; }
 // Canvas and collision use the same top face, including its rotation.
 export function platformPoint(x,y,p) {
  const angle=p.angle||0,dx=x-p.x,dy=(y-p.y)/.49;
@@ -23,8 +23,8 @@ const faces=[
 export function nextPlatform(p,index,random=Math.random) {
  const choices=faces.filter(f=>f.name!==p.name);
  const face=index===1?faces[0]:choices[Math.floor(random()*choices.length)];
- const size=Math.max(39,55-index*.32)*( .94+random()*.12);
- const distance=index===1?158:140+random()*65;
+ const size=(index===1?45:Math.max(26,43-index*.48))*(.92+random()*.16);
+ const distance=index===1?158:130+random()*95;
  const dir=random()>.5?1:-1;
  return {x:p.x+dir*.84*distance,y:p.y-.543*distance,r:size*face.width,ry:size*face.depth,shape:face.shape,name:face.name,angle:index<2?0:(random()-.5)*.7,index,item:true};
 }
